@@ -1,93 +1,146 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NoSIM Chat</title>
-  <!-- Bina server ke live chat ke liye PeerJS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NoSIM WhatsApp Pro</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-    body { background: #ece5dd; height: 100vh; display: flex; flex-direction: column; }
-    .header { background: #075e54; color: white; padding: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #e5ddd5; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    
+    /* Header */
+    .header { background: #075e54; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .header-title { font-size: 18px; font-weight: bold; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .icon-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; }
+
+    /* Login Screen */
     .screen { flex: 1; display: flex; flex-direction: column; padding: 20px; justify-content: center; }
-    .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); text-align: center; }
-    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-    button { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .box { background: white; padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
+    input[type="text"] { width: 100%; padding: 12px; margin: 12px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+    .btn-main { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+    /* Chat Screen */
     #chatScreen { display: none; flex: 1; flex-direction: column; height: 100%; overflow: hidden; }
-    .connect-bar { background: #fff; padding: 10px; display: flex; gap: 8px; border-bottom: 1px solid #ddd; }
-    .connect-bar input { margin: 0; flex: 1; padding: 8px; }
-    .connect-bar button { width: auto; padding: 8px 15px; background: #128c7e; }
+    .connect-bar { background: #f8f9fa; padding: 8px 12px; display: flex; gap: 8px; border-bottom: 1px solid #ddd; align-items: center; }
+    .connect-bar input { margin: 0; flex: 1; padding: 8px 12px; border-radius: 20px; font-size: 14px; }
+    .connect-bar button { padding: 8px 15px; background: #128c7e; color: white; border: none; border-radius: 20px; font-weight: bold; }
+
+    /* Messages Area */
     .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-    .msg { max-width: 75%; padding: 10px 14px; border-radius: 10px; font-size: 15px; word-wrap: break-word; }
-    .me { background: #dcf8c6; align-self: flex-end; }
-    .friend { background: white; align-self: flex-start; }
-    .sys { background: #ffeecd; align-self: center; font-size: 12px; padding: 5px 10px; border-radius: 5px; }
-    .bottom-bar { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; }
-    .bottom-bar input { margin: 0; flex: 1; border-radius: 20px; padding: 10px 15px; }
-    .bottom-bar button { width: auto; border-radius: 20px; padding: 10px 20px; background: #075e54; }
+    .msg { max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 15px; word-wrap: break-word; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+    .me { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
+    .friend { background: white; align-self: flex-start; border-top-left-radius: 0; }
+    .sys { background: #fff3cd; color: #856404; align-self: center; font-size: 12px; padding: 5px 12px; border-radius: 15px; text-align: center; }
+    .msg img { max-width: 100%; border-radius: 8px; margin-top: 4px; display: block; }
+    .time { font-size: 10px; color: #777; text-align: right; margin-top: 4px; }
+
+    /* Bottom Input Bar */
+    .bottom-bar { background: #f0f0f0; padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
+    .bottom-bar input[type="text"] { margin: 0; flex: 1; border-radius: 25px; padding: 10px 15px; border: none; }
+    .photo-btn { background: #fff; border: none; font-size: 20px; padding: 8px 12px; border-radius: 50%; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .send-btn { border-radius: 25px; padding: 10px 18px; background: #075e54; color: white; border: none; font-weight: bold; }
+
+    /* Call Banner */
+    #callBanner { display: none; background: #128c7e; color: white; padding: 10px; text-align: center; font-weight: bold; justify-content: space-between; align-items: center; }
+    .end-call { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 15px; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <span>NoSIM Chat</span>
-    <span id="myIdDisplay" style="font-size: 14px; font-weight: normal;"></span>
-  </div>
-
-  <!-- Screen 1: Bina SIM ke Username banana -->
-  <div id="loginScreen" class="screen">
-    <div class="box">
-      <h2>Apni Unique ID Banayein</h2>
-      <p style="color:#666; font-size:14px; margin-top:5px;">Bina phone number ya SIM ke</p>
-      <input type="text" id="usernameInput" placeholder="Apna Username likhein (e.g. rahul99)">
-      <button onclick="startApp()">Chalu Karein</button>
+    <div>
+      <div class="header-title">NoSIM Chat</div>
+      <div id="myIdDisplay" style="font-size: 12px; opacity: 0.9;"></div>
+    </div>
+    <div class="header-actions" id="topActions" style="display:none;">
+      <button class="icon-btn" onclick="startVoiceCall()">📞 Call</button>
+      <button class="icon-btn" onclick="logout()">Logout</button>
     </div>
   </div>
 
-  <!-- Screen 2: WhatsApp Style Chat Screen -->
+  <div id="callBanner">
+    <span id="callStatus">Voice Call Chalu Hai...</span>
+    <button class="end-call" onclick="endCall()">Cut 📴</button>
+  </div>
+
+  <!-- Screen 1: Login -->
+  <div id="loginScreen" class="screen">
+    <div class="box">
+      <h2 style="color:#075e54;">Welcome to NoSIM</h2>
+      <p style="color:#666; font-size:14px; margin-top:5px;">Bina SIM aur Phone Number ke Chat & Call</p>
+      <input type="text" id="usernameInput" placeholder="Apna Unique Username (e.g. mehtab1)">
+      <button class="btn-main" onclick="saveAndStart()">Chalu Karein</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Chat -->
   <div id="chatScreen">
     <div class="connect-bar">
       <input type="text" id="friendIdInput" placeholder="Dost ka Username dalein...">
       <button onclick="connectToFriend()">Jodein</button>
     </div>
 
-    <div class="messages" id="messageBox">
-      <div class="msg sys">Apne dost ka username upar daal kar 'Jodein' dabayein!</div>
-    </div>
+    <div class="messages" id="messageBox"></div>
 
     <div class="bottom-bar">
-      <input type="text" id="msgInput" placeholder="Message likhein...">
-      <button onclick="sendMessage()">Send</button>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="sendPhoto(event)">
+      <button class="photo-btn" onclick="document.getElementById('photoInput').click()">📷</button>
+      <input type="text" id="msgInput" placeholder="Message likhein..." onkeypress="if(event.key==='Enter') sendMessage()">
+      <button class="send-btn" onclick="sendMessage()">Send</button>
     </div>
   </div>
 
+  <audio id="remoteAudio" autoplay></audio>
+
   <script>
-    let peer;
-    let currentConn;
+    let peer, currentConn, currentCall, localStream;
+    let myUsername = localStorage.getItem('nosim_user');
 
-    function startApp() {
-      const username = document.getElementById('usernameInput').value.trim().toLowerCase();
-      if (!username) return alert('Kripya apna username likhein!');
+    // Agar pehle se login hai toh seedha chat kholein
+    window.onload = () => {
+      if (myUsername) {
+        initApp(myUsername);
+        loadSavedMessages();
+      }
+    };
 
+    function saveAndStart() {
+      const val = document.getElementById('usernameInput').value.trim().toLowerCase();
+      if (!val) return alert('Username likhna zaroori hai!');
+      localStorage.setItem('nosim_user', val);
+      myUsername = val;
+      initApp(val);
+    }
+
+    function initApp(username) {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('chatScreen').style.display = 'flex';
+      document.getElementById('topActions').style.display = 'flex';
       document.getElementById('myIdDisplay').innerText = 'My ID: @' + username;
 
-      // Unique ID banana
       peer = new Peer('nosim_' + username);
 
       peer.on('open', () => {
-        addMsg('Aapki ID (@' + username + ') chalu ho gayi hai!', 'sys');
+        addSysMsg('Aap Online hain (@' + username + ')');
       });
 
       peer.on('connection', (conn) => {
         currentConn = conn;
-        setupChat(conn.peer.replace('nosim_', ''));
+        const friend = conn.peer.replace('nosim_', '');
+        document.getElementById('friendIdInput').value = friend;
+        setupChat(friend);
       });
 
-      peer.on('error', (err) => {
-        alert('Error: Ye username kisi aur ne le liya hai ya internet slow hai.');
+      // Voice Call Receive Karna
+      peer.on('call', async (call) => {
+        if (confirm('Incoming Voice Call! Kya aap uthana chahte hain?')) {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          call.answer(localStream);
+          handleCall(call);
+        }
       });
     }
 
@@ -100,10 +153,11 @@
 
     function setupChat(friendName) {
       currentConn.on('open', () => {
-        addMsg('Aap @' + friendName + ' se jud gaye hain! Ab baat karein.', 'sys');
+        addSysMsg('Connected with @' + friendName);
       });
       currentConn.on('data', (data) => {
-        addMsg(data, 'friend');
+        if (data.type === 'text') addMsg(data.content, 'friend', false, true);
+        if (data.type === 'image') addMsg(data.content, 'friend', true, true);
       });
     }
 
@@ -111,21 +165,93 @@
       const input = document.getElementById('msgInput');
       const text = input.value.trim();
       if (!text) return;
-      if (!currentConn || !currentConn.open) {
-        return alert('Pehle upar dost ka username daal kar Jodein!');
-      }
-      currentConn.send(text);
-      addMsg(text, 'me');
+      if (!currentConn || !currentConn.open) return alert('Pehle upar dost ka username daal kar Jodein!');
+      
+      currentConn.send({ type: 'text', content: text });
+      addMsg(text, 'me', false, true);
       input.value = '';
     }
 
-    function addMsg(text, type) {
+    function sendPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!currentConn || !currentConn.open) return alert('Pehle dost ko Jodein!');
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        currentConn.send({ type: 'image', content: reader.result });
+        addMsg(reader.result, 'me', true, true);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function startVoiceCall() {
+      const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
+      if (!friend) return alert('Call karne ke liye dost ka username box mein hona chahiye!');
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const call = peer.call('nosim_' + friend, localStream);
+        handleCall(call);
+      } catch (e) {
+        alert('Mic permission on karein!');
+      }
+    }
+
+    function handleCall(call) {
+      currentCall = call;
+      document.getElementById('callBanner').style.display = 'flex';
+      call.on('stream', (remoteStream) => {
+        document.getElementById('remoteAudio').srcObject = remoteStream;
+      });
+      call.on('close', endCall);
+    }
+
+    function endCall() {
+      if (currentCall) currentCall.close();
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      document.getElementById('callBanner').style.display = 'none';
+    }
+
+    function addMsg(content, side, isImage = false, save = false) {
       const box = document.getElementById('messageBox');
       const div = document.createElement('div');
-      div.className = 'msg ' + type;
+      div.className = 'msg ' + side;
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (isImage) {
+        div.innerHTML = `<img src="${content}"><div class="time">${time}</div>`;
+      } else {
+        div.innerHTML = `<div>${content}</div><div class="time">${time}</div>`;
+      }
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+
+      if (save && !isImage) {
+        let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
+        history.push({ content, side, time });
+        localStorage.setItem('nosim_chats', JSON.stringify(history.slice(-50)));
+      }
+    }
+
+    function addSysMsg(text) {
+      const box = document.getElementById('messageBox');
+      const div = document.createElement('div');
+      div.className = 'msg sys';
       div.innerText = text;
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;
+    }
+
+    function loadSavedMessages() {
+      let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
+      history.forEach(m => addMsg(m.content, m.side, false, false));
+    }
+
+    function logout() {
+      if (confirm('Kya aap apni ID aur chats mitana chahte hain?')) {
+        localStorage.clear();
+        location.reload();
+      }
     }
   </script>
 </body>
