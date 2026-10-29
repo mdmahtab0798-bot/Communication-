@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +36,7 @@
 
     .screen { flex: 1; display: flex; flex-direction: column; padding: 20px; justify-content: center; }
     .box { background: var(--panel-bg); padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
-    input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; background: var(--panel-bg); color: var(--text-color); }
+    input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; background: var(--panel-bg); color: var(--text-color); }
     .btn-main { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
     #chatScreen { display: none; flex: 1; flex-direction: column; height: 100%; overflow: hidden; }
@@ -56,8 +57,8 @@
     .photo-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; }
     .send-btn { border-radius: 20px; padding: 8px 15px; background: #075e54; color: white; border: none; font-weight: bold; }
 
-    /* Ads Banner at Bottom */
-    .ad-banner { background: #333; color: #ffeb3b; text-align: center; padding: 6px; font-size: 12px; font-weight: bold; }
+    .affiliate-banner { background: #ff9800; color: #fff; text-align: center; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
+    .affiliate-banner span { background: #fff; color: #ff9800; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -71,6 +72,7 @@
       </div>
     </div>
     <div class="header-actions" id="topActions" style="display:none;">
+      <button class="icon-btn" onclick="openAdminPanel()">⚙️ Admin</button>
       <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
       <button class="icon-btn" onclick="startVoiceCall()">📞 Call</button>
       <button class="icon-btn" onclick="logout()">Logout</button>
@@ -105,9 +107,9 @@
     </div>
   </div>
 
-  <!-- Monetization / Advertisement Banner Example -->
-  <div class="ad-banner">
-    🌟 Sponsor Ad: Yahan apni Ads ya Affiliate Link lagakar kamai karein!
+  <!-- Affiliate Banner -->
+  <div class="affiliate-banner" id="adBanner" onclick="openAffiliateLink()">
+    🔥 <span id="adTag">Deal</span> <span id="adText">Special Offer - Click Here!</span>
   </div>
 
   <audio id="remoteAudio" autoplay></audio>
@@ -115,10 +117,38 @@
   <script>
     let peer, currentConn, currentCall, localStream;
     let myUsername = localStorage.getItem('nosim_user');
-    let isGroup = false;
-    let groupConnections = [];
+
+    // Default Affiliate Link agar aapne set nahi kiya ho
+    let currentAffiliateLink = localStorage.getItem('admin_aff_link') || "https://amazon.in";
+    let currentAffiliateText = localStorage.getItem('admin_aff_text') || "Best Discount Offer - Shop Now!";
+
+    function openAffiliateLink() {
+      window.open(currentAffiliateLink, '_blank');
+    }
+
+    // Sirf aapko pata hoga ye Admin Password (Aap ise baad me badal sakte hain)
+    function openAdminPanel() {
+      const pass = prompt('Admin Password dalein (Link badalne ke liye):');
+      if (pass === 'mehtab123') { // Ye aapka secret password hai
+        const newLink = prompt('Naya Affiliate Link dalein (jaise https://amzn.to/...):', currentAffiliateLink);
+        const newText = prompt('Banner par kya text dikhana hai?:', currentAffiliateText);
+        if (newLink) {
+          localStorage.setItem('admin_aff_link', newLink);
+          currentAffiliateLink = newLink;
+        }
+        if (newText) {
+          localStorage.setItem('admin_aff_text', newText);
+          currentAffiliateText = newText;
+          document.getElementById('adText').innerText = newText;
+        }
+        alert('Affiliate Link successfully update ho gaya!');
+      } else if (pass !== null) {
+        alert('Galat Password!');
+      }
+    }
 
     window.onload = () => {
+      document.getElementById('adText').innerText = currentAffiliateText;
       if (localStorage.getItem('nosim_dark') === 'true') {
         document.body.classList.add('dark-mode');
       }
@@ -165,7 +195,6 @@
     }
 
     function connectToFriend() {
-      isGroup = false;
       const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
       if (!friend) return alert('Dost ka username dalein!');
       currentConn = peer.connect('nosim_' + friend);
@@ -173,11 +202,10 @@
     }
 
     function createGroup() {
-      const groupName = prompt('Group ka naam ya Code dalein (jaise: mitro_group):');
+      const groupName = prompt('Group ka naam ya Code dalein:');
       if (!groupName) return;
-      isGroup = true;
       document.getElementById('friendIdInput').value = groupName;
-      addSysMsg('Group "' + groupName + '" ban gaya! Ab sabhi dosto ko yehi group code daal kar judne ko kahein.');
+      addSysMsg('Group "' + groupName + '" ban gaya!');
     }
 
     function setupChat(friendName) {
@@ -194,7 +222,7 @@
       const input = document.getElementById('msgInput');
       const text = input.value.trim();
       if (!text) return;
-      if (!currentConn || !currentConn.open) return alert('Pehle kisi dost ya group se Jodein!');
+      if (!currentConn || !currentConn.open) return alert('Pehle connect karein!');
       
       currentConn.send({ type: 'text', content: text });
       addMsg(text, 'me', false, true);
@@ -216,5 +244,62 @@
 
     async function startVoiceCall() {
       const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
-      if (!friend) return alert('Dost ka username dale
+      if (!friend) return alert('Dost ka username dalein!');
+      try {
+        currentCall = peer.call('nosim_' + friend, await navigator.mediaDevices.getUserMedia({ audio: true }));
+        alert('Voice Call lag rahi hai...');
+        currentCall.on('stream', (stream) => document.getElementById('remoteAudio').srcObject = stream);
+      } catch (e) {
+        alert('Mic permission on karein!');
+      }
+    }
 
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('nosim_dark', document.body.classList.contains('dark-mode'));
+    }
+
+    function addMsg(content, side, isImage = false, save = false) {
+      const box = document.getElementById('messageBox');
+      const div = document.createElement('div');
+      div.className = 'msg ' + side;
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (isImage) {
+        div.innerHTML = `<img src="${content}"><div class="time">${time}</div>`;
+      } else {
+        div.innerHTML = `<div>${content}</div><div class="time">${time}</div>`;
+      }
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+
+      if (save && !isImage) {
+        let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
+        history.push({ content, side, time });
+        localStorage.setItem('nosim_chats', JSON.stringify(history.slice(-50)));
+      }
+    }
+
+    function addSysMsg(text) {
+      const box = document.getElementById('messageBox');
+      const div = document.createElement('div');
+      div.className = 'msg sys';
+      div.innerText = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function loadSavedMessages() {
+      let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
+      history.forEach(m => addMsg(m.content, m.side, false, false));
+    }
+
+    function logout() {
+      if (confirm('Logout karein?')) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
