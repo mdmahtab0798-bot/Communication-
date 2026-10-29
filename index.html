@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,71 +6,83 @@
   <title>NoSIM WhatsApp Pro</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #e5ddd5; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-    
-    /* Header */
-    .header { background: #075e54; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-    .header-title { font-size: 18px; font-weight: bold; }
-    .header-actions { display: flex; gap: 10px; align-items: center; }
-    .icon-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; }
+    :root {
+      --bg-color: #e5ddd5;
+      --header-bg: #075e54;
+      --panel-bg: #f8f9fa;
+      --text-color: #000;
+      --msg-me: #dcf8c6;
+      --msg-friend: #fff;
+    }
+    .dark-mode {
+      --bg-color: #121212;
+      --header-bg: #1f1f1f;
+      --panel-bg: #1e1e1e;
+      --text-color: #fff;
+      --msg-me: #005c4b;
+      --msg-friend: #262d31;
+    }
 
-    /* Login Screen */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: var(--bg-color); color: var(--text-color); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; transition: 0.3s; }
+    
+    .header { background: var(--header-bg); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .logo-area { display: flex; align-items: center; gap: 8px; }
+    .logo { width: 35px; height: 35px; background: #25d366; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; color: white; }
+    .header-title { font-size: 16px; font-weight: bold; }
+    .header-actions { display: flex; gap: 6px; align-items: center; }
+    .icon-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 10px; border-radius: 15px; font-size: 13px; cursor: pointer; }
+
     .screen { flex: 1; display: flex; flex-direction: column; padding: 20px; justify-content: center; }
-    .box { background: white; padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
-    input[type="text"] { width: 100%; padding: 12px; margin: 12px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+    .box { background: var(--panel-bg); padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
+    input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; background: var(--panel-bg); color: var(--text-color); }
     .btn-main { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
-    /* Chat Screen */
     #chatScreen { display: none; flex: 1; flex-direction: column; height: 100%; overflow: hidden; }
-    .connect-bar { background: #f8f9fa; padding: 8px 12px; display: flex; gap: 8px; border-bottom: 1px solid #ddd; align-items: center; }
-    .connect-bar input { margin: 0; flex: 1; padding: 8px 12px; border-radius: 20px; font-size: 14px; }
-    .connect-bar button { padding: 8px 15px; background: #128c7e; color: white; border: none; border-radius: 20px; font-weight: bold; }
+    .connect-bar { background: var(--panel-bg); padding: 8px 12px; display: flex; gap: 6px; border-bottom: 1px solid #444; align-items: center; }
+    .connect-bar input { margin: 0; flex: 1; padding: 6px 10px; border-radius: 15px; font-size: 13px; }
+    .connect-bar button { padding: 6px 12px; background: #128c7e; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 13px; }
 
-    /* Messages Area */
     .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
     .msg { max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 15px; word-wrap: break-word; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-    .me { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
-    .friend { background: white; align-self: flex-start; border-top-left-radius: 0; }
+    .me { background: var(--msg-me); align-self: flex-end; border-top-right-radius: 0; }
+    .friend { background: var(--msg-friend); color: var(--text-color); align-self: flex-start; border-top-left-radius: 0; }
     .sys { background: #fff3cd; color: #856404; align-self: center; font-size: 12px; padding: 5px 12px; border-radius: 15px; text-align: center; }
     .msg img { max-width: 100%; border-radius: 8px; margin-top: 4px; display: block; }
-    .time { font-size: 10px; color: #777; text-align: right; margin-top: 4px; }
+    .time { font-size: 10px; color: #888; text-align: right; margin-top: 4px; }
 
-    /* Bottom Input Bar */
-    .bottom-bar { background: #f0f0f0; padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
-    .bottom-bar input[type="text"] { margin: 0; flex: 1; border-radius: 25px; padding: 10px 15px; border: none; }
-    .photo-btn { background: #fff; border: none; font-size: 20px; padding: 8px 12px; border-radius: 50%; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    .send-btn { border-radius: 25px; padding: 10px 18px; background: #075e54; color: white; border: none; font-weight: bold; }
+    .bottom-bar { background: var(--panel-bg); padding: 8px 10px; display: flex; gap: 6px; align-items: center; }
+    .bottom-bar input[type="text"] { margin: 0; flex: 1; border-radius: 20px; padding: 10px 15px; border: 1px solid #ccc; }
+    .photo-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; }
+    .send-btn { border-radius: 20px; padding: 8px 15px; background: #075e54; color: white; border: none; font-weight: bold; }
 
-    /* Call Banner */
-    #callBanner { display: none; background: #128c7e; color: white; padding: 10px; text-align: center; font-weight: bold; justify-content: space-between; align-items: center; }
-    .end-call { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 15px; }
+    /* Ads Banner at Bottom */
+    .ad-banner { background: #333; color: #ffeb3b; text-align: center; padding: 6px; font-size: 12px; font-weight: bold; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div>
-      <div class="header-title">NoSIM Chat</div>
-      <div id="myIdDisplay" style="font-size: 12px; opacity: 0.9;"></div>
+    <div class="logo-area">
+      <div class="logo">💬</div>
+      <div>
+        <div class="header-title">NoSIM Chat</div>
+        <div id="myIdDisplay" style="font-size: 11px; opacity: 0.9;"></div>
+      </div>
     </div>
     <div class="header-actions" id="topActions" style="display:none;">
+      <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
       <button class="icon-btn" onclick="startVoiceCall()">📞 Call</button>
       <button class="icon-btn" onclick="logout()">Logout</button>
     </div>
   </div>
 
-  <div id="callBanner">
-    <span id="callStatus">Voice Call Chalu Hai...</span>
-    <button class="end-call" onclick="endCall()">Cut 📴</button>
-  </div>
-
   <!-- Screen 1: Login -->
   <div id="loginScreen" class="screen">
     <div class="box">
-      <h2 style="color:#075e54;">Welcome to NoSIM</h2>
-      <p style="color:#666; font-size:14px; margin-top:5px;">Bina SIM aur Phone Number ke Chat & Call</p>
-      <input type="text" id="usernameInput" placeholder="Apna Unique Username (e.g. mehtab1)">
+      <h2 style="color:#25d366; margin-bottom: 5px;">NoSIM Pro</h2>
+      <p style="color:#777; font-size:13px; margin-bottom:15px;">Bina SIM aur Number ki Chat</p>
+      <input type="text" id="usernameInput" placeholder="Apna Username likhein (e.g. rahul)">
       <button class="btn-main" onclick="saveAndStart()">Chalu Karein</button>
     </div>
   </div>
@@ -79,8 +90,9 @@
   <!-- Screen 2: Chat -->
   <div id="chatScreen">
     <div class="connect-bar">
-      <input type="text" id="friendIdInput" placeholder="Dost ka Username dalein...">
+      <input type="text" id="friendIdInput" placeholder="Dost/Group ID dalein...">
       <button onclick="connectToFriend()">Jodein</button>
+      <button onclick="createGroup()" style="background:#25d366;">+ Group</button>
     </div>
 
     <div class="messages" id="messageBox"></div>
@@ -93,14 +105,23 @@
     </div>
   </div>
 
+  <!-- Monetization / Advertisement Banner Example -->
+  <div class="ad-banner">
+    🌟 Sponsor Ad: Yahan apni Ads ya Affiliate Link lagakar kamai karein!
+  </div>
+
   <audio id="remoteAudio" autoplay></audio>
 
   <script>
     let peer, currentConn, currentCall, localStream;
     let myUsername = localStorage.getItem('nosim_user');
+    let isGroup = false;
+    let groupConnections = [];
 
-    // Agar pehle se login hai toh seedha chat kholein
     window.onload = () => {
+      if (localStorage.getItem('nosim_dark') === 'true') {
+        document.body.classList.add('dark-mode');
+      }
       if (myUsername) {
         initApp(myUsername);
         loadSavedMessages();
@@ -119,7 +140,7 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('chatScreen').style.display = 'flex';
       document.getElementById('topActions').style.display = 'flex';
-      document.getElementById('myIdDisplay').innerText = 'My ID: @' + username;
+      document.getElementById('myIdDisplay').innerText = '@' + username;
 
       peer = new Peer('nosim_' + username);
 
@@ -129,14 +150,13 @@
 
       peer.on('connection', (conn) => {
         currentConn = conn;
-        const friend = conn.peer.replace('nosim_', '');
-        document.getElementById('friendIdInput').value = friend;
-        setupChat(friend);
+        const sender = conn.peer.replace('nosim_', '');
+        document.getElementById('friendIdInput').value = sender;
+        setupChat(sender);
       });
 
-      // Voice Call Receive Karna
       peer.on('call', async (call) => {
-        if (confirm('Incoming Voice Call! Kya aap uthana chahte hain?')) {
+        if (confirm('Incoming Voice Call! Uthana chahte hain?')) {
           localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           call.answer(localStream);
           handleCall(call);
@@ -145,10 +165,19 @@
     }
 
     function connectToFriend() {
+      isGroup = false;
       const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
       if (!friend) return alert('Dost ka username dalein!');
       currentConn = peer.connect('nosim_' + friend);
       setupChat(friend);
+    }
+
+    function createGroup() {
+      const groupName = prompt('Group ka naam ya Code dalein (jaise: mitro_group):');
+      if (!groupName) return;
+      isGroup = true;
+      document.getElementById('friendIdInput').value = groupName;
+      addSysMsg('Group "' + groupName + '" ban gaya! Ab sabhi dosto ko yehi group code daal kar judne ko kahein.');
     }
 
     function setupChat(friendName) {
@@ -165,7 +194,7 @@
       const input = document.getElementById('msgInput');
       const text = input.value.trim();
       if (!text) return;
-      if (!currentConn || !currentConn.open) return alert('Pehle upar dost ka username daal kar Jodein!');
+      if (!currentConn || !currentConn.open) return alert('Pehle kisi dost ya group se Jodein!');
       
       currentConn.send({ type: 'text', content: text });
       addMsg(text, 'me', false, true);
@@ -175,7 +204,7 @@
     function sendPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
-      if (!currentConn || !currentConn.open) return alert('Pehle dost ko Jodein!');
+      if (!currentConn || !currentConn.open) return alert('Pehle connect karein!');
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -187,72 +216,5 @@
 
     async function startVoiceCall() {
       const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
-      if (!friend) return alert('Call karne ke liye dost ka username box mein hona chahiye!');
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const call = peer.call('nosim_' + friend, localStream);
-        handleCall(call);
-      } catch (e) {
-        alert('Mic permission on karein!');
-      }
-    }
+      if (!friend) return alert('Dost ka username dale
 
-    function handleCall(call) {
-      currentCall = call;
-      document.getElementById('callBanner').style.display = 'flex';
-      call.on('stream', (remoteStream) => {
-        document.getElementById('remoteAudio').srcObject = remoteStream;
-      });
-      call.on('close', endCall);
-    }
-
-    function endCall() {
-      if (currentCall) currentCall.close();
-      if (localStream) localStream.getTracks().forEach(t => t.stop());
-      document.getElementById('callBanner').style.display = 'none';
-    }
-
-    function addMsg(content, side, isImage = false, save = false) {
-      const box = document.getElementById('messageBox');
-      const div = document.createElement('div');
-      div.className = 'msg ' + side;
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (isImage) {
-        div.innerHTML = `<img src="${content}"><div class="time">${time}</div>`;
-      } else {
-        div.innerHTML = `<div>${content}</div><div class="time">${time}</div>`;
-      }
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
-
-      if (save && !isImage) {
-        let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
-        history.push({ content, side, time });
-        localStorage.setItem('nosim_chats', JSON.stringify(history.slice(-50)));
-      }
-    }
-
-    function addSysMsg(text) {
-      const box = document.getElementById('messageBox');
-      const div = document.createElement('div');
-      div.className = 'msg sys';
-      div.innerText = text;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
-    }
-
-    function loadSavedMessages() {
-      let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
-      history.forEach(m => addMsg(m.content, m.side, false, false));
-    }
-
-    function logout() {
-      if (confirm('Kya aap apni ID aur chats mitana chahte hain?')) {
-        localStorage.clear();
-        location.reload();
-      }
-    }
-  </script>
-</body>
-</html>
