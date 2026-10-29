@@ -1,207 +1,290 @@
+
+
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>No SIM Chat & Call</title>
-  <!-- PeerJS WebRTC Library for Calling -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #e5ddd5; display: flex; justify-content: center; height: 100vh; }
-    .app-container { width: 100%; max-width: 480px; height: 100vh; background: #fff; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    
-    /* Header */
-    .header { background: #075e54; color: white; padding: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-    .my-id-badge { font-size: 11px; background: #128c7e; padding: 4px 8px; border-radius: 12px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Style P2P Chat</title>
+    <!-- PeerJS Library for WebRTC -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* Header */
+        .header { background-color: #075e54; color: white; padding: 12px 15px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header h2 { font-size: 18px; }
+        .my-id-box { background: #128c7e; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; word-break: break-all; }
+        
+        /* Tabs */
+        .tabs { display: flex; background-color: #075e54; color: #b3d4d0; font-weight: bold; font-size: 14px; }
+        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab.active { color: white; border-bottom: 3px solid #25d366; }
 
-    /* Tabs (WhatsApp Style) */
-    .tabs { display: flex; background: #075e54; }
-    .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #b2d8d8; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; }
-    .tab-btn.active { color: white; border-bottom: 3px solid #25d366; }
+        /* Controls Bar */
+        .controls { background: white; padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+        .controls input { flex: 1; min-width: 180px; padding: 10px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        .btn { padding: 10px 15px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-connect { background-color: #128c7e; }
+        .btn-call { background-color: #25d366; }
+        .btn-end { background-color: #dc3545; display: none; }
 
-    /* List Content */
-    .tab-content { flex: 1; overflow-y: auto; background: #fff; }
-    .chat-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-    .chat-item:hover { background-color: #f5f5f5; }
-    .avatar { width: 45px; height: 45px; border-radius: 50%; background: #25d366; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 12px; }
-    .group-avatar { background: #34b7f1; }
-    .chat-info h4 { font-size: 15px; color: #111; }
-    .chat-info p { font-size: 12px; color: #777; margin-top: 3px; }
+        /* Call Status Banner */
+        #call-status { background: #ffeeba; color: #856404; text-align: center; padding: 8px; font-size: 14px; display: none; font-weight: bold; }
 
-    /* Call Action Bar */
-    .call-bar { padding: 10px 15px; background: #f0f2f5; display: flex; gap: 8px; border-bottom: 1px solid #ddd; }
-    .call-bar input { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; font-size: 14px; outline: none; }
-    .call-bar button { padding: 8px 16px; background: #25d366; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        /* Chat Area */
+        .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #e5ddd5; }
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .msg.sent { background-color: #dcf8c6; align-self: flex-end; }
+        .msg.received { background-color: white; align-self: flex-start; }
+        .msg-sender { font-size: 10px; color: #075e54; font-weight: bold; margin-bottom: 3px; }
+        .system-msg { align-self: center; background: #d1eaed; color: #333; font-size: 12px; padding: 5px 12px; border-radius: 12px; }
 
-    /* Fullscreen Calling Screen Overlay */
-    #callScreen { display: none; position: fixed; inset: 0; background: #111b21; z-index: 9999; flex-direction: column; align-items: center; justify-content: space-around; color: white; }
-    .call-user-avatar { width: 100px; height: 100px; border-radius: 50%; background: #25d366; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
-    .end-call-btn { width: 65px; height: 65px; border-radius: 50%; background: #ea0038; border: none; color: white; font-size: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-  </style>
+        /* Connected Peers List for Group */
+        #group-info { background: #fff; padding: 8px 15px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; display: none; }
+
+        /* Bottom Message Input */
+        .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; }
+        .input-area input { flex: 1; padding: 12px 15px; border: none; border-radius: 25px; outline: none; font-size: 15px; }
+        .btn-send { background-color: #075e54; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: white; border: none; cursor: pointer; font-size: 18px; }
+    </style>
 </head>
 <body>
 
-<div class="app-container">
-  <!-- Top App Header -->
-  <div class="header">
-    <span>WhatsApp Style Chat</span>
-    <span class="my-id-badge" id="myPeerId">Connecting...</span>
-  </div>
-
-  <!-- Tabs: Direct Chats vs Groups -->
-  <div class="tabs">
-    <button class="tab-btn active" id="tabChats" onclick="openTab('chats')">CHATS (1-ON-1)</button>
-    <button class="tab-btn" id="tabGroups" onclick="openTab('groups')">GROUPS</button>
-  </div>
-
-  <!-- Direct Call Input Bar -->
-  <div class="call-bar">
-    <input type="text" id="targetPeerId" placeholder="Friend ki ID daalein...">
-    <button onclick="startVoiceCall()">Call 📞</button>
-  </div>
-
-  <!-- Direct Chats View -->
-  <div id="chatsView" class="tab-content">
-    <div class="chat-item">
-      <div class="avatar">👤</div>
-      <div class="chat-info">
-        <h4>Personal Chat (Friend 1)</h4>
-        <p>Single chat conversation yahan aayegi</p>
-      </div>
+    <div class="header">
+        <div class="header-top">
+            <h2>WhatsApp Style Chat</h2>
+            <div class="my-id-box" onclick="copyMyId()" id="my-id">ID Load ho rahi hai... (Tap to copy)</div>
+        </div>
     </div>
-  </div>
 
-  <!-- Groups View -->
-  <div id="groupsView" class="tab-content" style="display: none;">
-    <div class="chat-item">
-      <div class="avatar group-avatar">👥</div>
-      <div class="chat-info">
-        <h4>Family / Friends Group</h4>
-        <p>Group message conversation yahan aayegi</p>
-      </div>
+    <div class="tabs">
+        <div class="tab active" id="tab-single" onclick="switchMode('single')">CHATS (1-ON-1)</div>
+        <div class="tab" id="tab-group" onclick="switchMode('group')">GROUPS</div>
     </div>
-  </div>
-</div>
 
-<!-- CALL CUTTING POPUP SCREEN (End Call Button) -->
-<div id="callScreen">
-  <div style="text-align: center;">
-    <div class="call-user-avatar">📞</div>
-    <h2 id="callingUserText">Call Chalu Hai...</h2>
-    <p style="color: #8696a0; margin-top: 5px;" id="callTimer">Connected</p>
-  </div>
+    <div class="controls">
+        <input type="text" id="friend-id" placeholder="Friend ki ID daalein...">
+        <button class="btn btn-connect" id="connect-btn" onclick="connectPeer()">Join Chat</button>
+        <button class="btn btn-call" id="call-btn" onclick="startCall()">Call 📞</button>
+        <button class="btn btn-end" id="end-btn" onclick="endCall()">End Call ❌</button>
+    </div>
 
-  <!-- Lal Rang Ka Call Cut Button -->
-  <button class="end-call-btn" onclick="hangUpCall()" title="Call Cut Karein">
-    ✖
-  </button>
-</div>
+    <div id="call-status">Call chal rahi hai... 🔊</div>
+    <div id="group-info">Group Members Connected: <span id="member-count">0</span></div>
 
-<!-- Audio Element to Play Friend's Voice -->
-<audio id="remoteAudio" autoplay></audio>
+    <div class="chat-container" id="chat-box">
+        <div class="system-msg">Apni ID dost ko bhejein ya unki ID upar daal kar 'Join Chat' dabayein.</div>
+    </div>
 
-<script>
-  let peer = null;
-  let activeCall = null;
-  let localStream = null;
+    <div class="input-area">
+        <input type="text" id="msg-input" placeholder="Message likhein..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button class="btn-send" onclick="sendMessage()">➤</button>
+    </div>
 
-  // 1. Peer ID create karna
-  peer = new Peer();
+    <!-- Hidden Audio Element for Calls -->
+    <audio id="remote-audio" autoplay></audio>
 
-  peer.on('open', (id) => {
-    document.getElementById('myPeerId').innerText = "Aapki ID: " + id;
-  });
+    <script>
+        const peer = new Peer();
+        let myId = "";
+        let currentMode = 'single'; // 'single' or 'group'
+        let singleConn = null;
+        let groupConns = [];
+        let activeCall = null;
+        let localStream = null;
 
-  // 2. Incoming Call Aane par
-  peer.on('call', (call) => {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      localStream = stream;
-      call.answer(stream); // Call pick karna
-      activeCall = call;
-      showCallScreen("Call Pick Ho Gayi");
+        // 1. Generate & Show ID
+        peer.on('open', (id) => {
+            myId = id;
+            document.getElementById('my-id').innerText = "Aapki ID: " + id + " 📋";
+        });
 
-      call.on('stream', (remoteStream) => {
-        document.getElementById('remoteAudio').srcObject = remoteStream;
-      });
+        function copyMyId() {
+            if (!myId) return;
+            navigator.clipboard.writeText(myId);
+            alert("Aapki ID copy ho gayi hai! Ise apne dost ko bhejein.");
+        }
 
-      call.on('close', () => {
-        closeCallUI();
-      });
-    }).catch(err => {
-      alert("Mic permission allow karein!");
-    });
-  });
+        // 2. Switch Between 1-on-1 and Group
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tab-single').classList.toggle('active', mode === 'single');
+            document.getElementById('tab-group').classList.toggle('active', mode === 'group');
+            document.getElementById('group-info').style.display = mode === 'group' ? 'block' : 'none';
+            document.getElementById('connect-btn').innerText = mode === 'group' ? 'Add to Group' : 'Join Chat';
+            addSystemMsg(mode === 'group' ? "Group Mode: Kai dosto ki ID ek-ek karke Add karein." : "1-on-1 Mode: Kisi ek dost se private chat karein.");
+        }
 
-  // 3. Call Lagana
-  function startVoiceCall() {
-    const friendId = document.getElementById('targetPeerId').value.trim();
-    if (!friendId) {
-      alert("Pehle dost ki ID enter karein!");
-      return;
-    }
+        // 3. Receive Incoming Chat Connection
+        peer.on('connection', (conn) => {
+            setupConnection(conn);
+        });
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      localStream = stream;
-      showCallScreen("Calling: " + friendId);
+        // 4. Connect to Friend
+        function connectPeer() {
+            const friendId = document.getElementById('friend-id').value.trim();
+            if (!friendId || friendId === myId) {
+                alert("Kripya sahi Friend ID daalein!");
+                return;
+            }
+            const conn = peer.connect(friendId);
+            setupConnection(conn);
+            document.getElementById('friend-id').value = "";
+        }
 
-      const call = peer.call(friendId, stream);
-      activeCall = call;
+        function setupConnection(conn) {
+            conn.on('open', () => {
+                if (currentMode === 'single') {
+                    singleConn = conn;
+                    addSystemMsg("Connected with: " + conn.peer.substring(0, 8) + "...");
+                } else {
+                    if (!groupConns.find(c => c.peer === conn.peer)) {
+                        groupConns.push(conn);
+                        document.getElementById('member-count').innerText = groupConns.length;
+                        addSystemMsg("Group mein naya member juda: " + conn.peer.substring(0, 8));
+                    }
+                }
+            });
 
-      call.on('stream', (remoteStream) => {
-        document.getElementById('remoteAudio').srcObject = remoteStream;
-      });
+            conn.on('data', (data) => {
+                displayMessage(data.text, 'received', data.sender);
+                // Agar group mode hai toh baaki members ko bhi message forward karein
+                if (currentMode === 'group' && !data.forwarded) {
+                    groupConns.forEach(c => {
+                        if (c.peer !== conn.peer && c.open) {
+                            c.send({ text: data.text, sender: data.sender, forwarded: true });
+                        }
+                    });
+                }
+            });
 
-      call.on('close', () => {
-        closeCallUI();
-      });
-    }).catch(err => {
-      alert("Mic permission allow karein!");
-    });
-  }
+            conn.on('close', () => {
+                addSystemMsg("User disconnected: " + conn.peer.substring(0, 8));
+                groupConns = groupConns.filter(c => c.peer !== conn.peer);
+                document.getElementById('member-count').innerText = groupConns.length;
+            });
+        }
 
-  // 4. CALL CUT KARNA (End Call Function)
-  function hangUpCall() {
-    if (activeCall) {
-      activeCall.close(); // Call disconnect
-    }
-    closeCallUI();
-  }
+        // 5. Send Message
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
 
-  function closeCallUI() {
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop()); // Mic band karna
-      localStream = null;
-    }
-    document.getElementById('callScreen').style.display = 'none';
-  }
+            const payload = { text: text, sender: myId.substring(0, 6) };
 
-  function showCallScreen(title) {
-    document.getElementById('callingUserText').innerText = title;
-    document.getElementById('callScreen').style.display = 'flex';
-  }
+            if (currentMode === 'single') {
+                if (singleConn && singleConn.open) {
+                    singleConn.send(payload);
+                    displayMessage(text, 'sent', 'You');
+                } else {
+                    alert("Pehle dost ki ID daal kar 'Join Chat' par click karein!");
+                    return;
+                }
+            } else {
+                if (groupConns.length > 0) {
+                    groupConns.forEach(conn => {
+                        if (conn.open) conn.send(payload);
+                    });
+                    displayMessage(text, 'sent', 'You (Group)');
+                } else {
+                    alert("Group mein koi member juda nahi hai! ID daal kar 'Add to Group' karein.");
+                    return;
+                }
+            }
+            input.value = "";
+        }
 
-  // 5. WhatsApp Style Tab Switch (Single vs Group)
-  function openTab(tabName) {
-    const chatsView = document.getElementById('chatsView');
-    const groupsView = document.getElementById('groupsView');
-    const tabChats = document.getElementById('tabChats');
-    const tabGroups = document.getElementById('tabGroups');
+        function displayMessage(text, type, sender) {
+            const box = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${type}`;
+            msgDiv.innerHTML = `<div class="msg-sender">${sender}</div><div>${text}</div>`;
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
 
-    if (tabName === 'chats') {
-      chatsView.style.display = 'block';
-      groupsView.style.display = 'none';
-      tabChats.classList.add('active');
-      tabGroups.classList.remove('active');
-    } else {
-      chatsView.style.display = 'none';
-      groupsView.style.display = 'block';
-      tabGroups.classList.add('active');
-      tabChats.classList.remove('active');
-    }
-  }
-</script>
+        function addSystemMsg(text) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = 'system-msg';
+            div.innerText = text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // 6. Audio Calling & End Call Functionality
+        async function startCall() {
+            let targetId = document.getElementById('friend-id').value.trim();
+            if (!targetId && singleConn) targetId = singleConn.peer;
+
+            if (!targetId) {
+                alert("Call lagane ke liye Friend ki ID box mein daalein ya pehle chat connect karein!");
+                return;
+            }
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const call = peer.call(targetId, localStream);
+                handleCall(call);
+                addSystemMsg("Calling " + targetId.substring(0, 8) + "...");
+            } catch (err) {
+                alert("Microphone permission nahi mili! Call ke liye mic allow karein.");
+            }
+        }
+
+        peer.on('call', async (call) => {
+            const answerCall = confirm("Dost ka Audio Call aa raha hai. Kya aap uthana chahte hain?");
+            if (answerCall) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    call.answer(localStream);
+                    handleCall(call);
+                } catch (err) {
+                    alert("Mic access error!");
+                }
+            } else {
+                call.close();
+            }
+        });
+
+        function handleCall(call) {
+            activeCall = call;
+            document.getElementById('call-btn').style.display = 'none';
+            document.getElementById('end-btn').style.display = 'inline-block';
+            document.getElementById('call-status').style.display = 'block';
+
+            call.on('stream', (remoteStream) => {
+                const audio = document.getElementById('remote-audio');
+                audio.srcObject = remoteStream;
+            });
+
+            call.on('close', () => {
+                resetCallUI();
+                addSystemMsg("Call samapt ho gayi (Call Ended).");
+            });
+        }
+
+        function endCall() {
+            if (activeCall) activeCall.close();
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            resetCallUI();
+            addSystemMsg("Aapne call kaat di.");
+        }
+
+        function resetCallUI() {
+            activeCall = null;
+            document.getElementById('call-btn').style.display = 'inline-block';
+            document.getElementById('end-btn').style.display = 'none';
+            document.getElementById('call-status').style.display = 'none';
+            document.getElementById('remote-audio').srcObject = null;
+        }
+    </script>
 </body>
 </html>
-
 
