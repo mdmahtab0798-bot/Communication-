@@ -36,8 +36,8 @@
     .logo-area { display: flex; align-items: center; gap: 8px; }
     .logo { width: 35px; height: 35px; background: #25d366; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; color: white; }
     .header-title { font-size: 16px; font-weight: bold; }
-    .header-actions { display: flex; gap: 6px; align-items: center; }
-    .icon-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 10px; border-radius: 15px; font-size: 13px; cursor: pointer; }
+    .header-actions { display: flex; gap: 5px; align-items: center; }
+    .icon-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 8px; border-radius: 12px; font-size: 12px; cursor: pointer; }
 
     .screen { flex: 1; display: flex; flex-direction: column; padding: 20px; justify-content: center; }
     .box { background: var(--panel-bg); padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
@@ -65,8 +65,8 @@
     .affiliate-banner { background: #ff9800; color: #fff; text-align: center; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
     .affiliate-banner span { background: #fff; color: #ff9800; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 
-    /* Custom Install Button Style */
-    #installBtn { display: none; background: #ff5722; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; }
+    /* Install Button - Hamesha Dikhega */
+    #installBtn { display: inline-block; background: #ff5722; color: white; border: none; padding: 5px 10px; border-radius: 12px; font-weight: bold; font-size: 12px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -80,16 +80,251 @@
       </div>
     </div>
     <div class="header-actions" id="topActions" style="display:none;">
-      <button id="installBtn" onclick="installApp()">📥 Install App</button>
-      <button class="icon-btn" onclick="openAdminPanel()">⚙️ Admin</button>
+      <button id="installBtn" onclick="installApp()">📥 Install</button>
+      <button class="icon-btn" onclick="openAdminPanel()">⚙️</button>
       <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
-      <button class="icon-btn" onclick="startVoiceCall()">📞 Call</button>
-      <button class="icon-btn" onclick="logout()">Logout</button>
+      <button class="icon-btn" onclick="startVoiceCall()">📞</button>
+      <button class="icon-btn" onclick="logout()">🚪</button>
     </div>
   </div>
 
   <!-- Screen 1: Login -->
   <div id="loginScreen" class="screen">
     <div class="box">
-      <h2 style
+      <h2 style="color:#25d366; margin-bottom: 5px;">NoSIM Pro</h2>
+      <p style="color:#777; font-size:13px; margin-bottom:15px;">Bina SIM aur Number ki Chat</p>
+      <input type="text" id="usernameInput" placeholder="Apna Username likhein (e.g. rahul)">
+      <button class="btn-main" onclick="saveAndStart()">Chalu Karein</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Chat -->
+  <div id="chatScreen">
+    <div class="connect-bar">
+      <input type="text" id="friendIdInput" placeholder="Dost/Group ID dalein...">
+      <button onclick="connectToFriend()">Jodein</button>
+      <button onclick="createGroup()" style="background:#25d366;">+ Group</button>
+    </div>
+
+    <div class="messages" id="messageBox"></div>
+
+    <div class="bottom-bar">
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="sendPhoto(event)">
+      <button class="photo-btn" onclick="document.getElementById('photoInput').click()">📷</button>
+      <input type="text" id="msgInput" placeholder="Message likhein..." onkeypress="if(event.key==='Enter') sendMessage()">
+      <button class="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Affiliate Banner -->
+  <div class="affiliate-banner" id="adBanner" onclick="openAffiliateLink()">
+    🔥 <span id="adTag">Deal</span> <span id="adText">Special Offer - Click Here!</span>
+  </div>
+
+  <audio id="remoteAudio" autoplay></audio>
+
+  <script>
+    let peer, currentConn, currentCall, localStream;
+    let myUsername = localStorage.getItem('nosim_user');
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          deferredPrompt = null;
+        });
+      } else {
+        alert("App install karne ke liye:\n\n1. Apne browser (Chrome) ke upar kone me ( ⋮ ) 3 dots par click karein.\n2. Wahan 'Install app' ya 'Add to Home screen' par click karein!");
+      }
+    }
+
+    let currentAffiliateLink = localStorage.getItem('admin_aff_link') || "https://amazon.in";
+    let currentAffiliateText = localStorage.getItem('admin_aff_text') || "Best Discount Offer - Shop Now!";
+
+    function openAffiliateLink() {
+      window.open(currentAffiliateLink, '_blank');
+    }
+
+    function openAdminPanel() {
+      const pass = prompt('Admin Password dalein:');
+      if (pass === 'mehtab123') {
+        const newLink = prompt('Naya Affiliate Link dalein:', currentAffiliateLink);
+        const newText = prompt('Banner par kya text dikhana hai?:', currentAffiliateText);
+        if (newLink) {
+          localStorage.setItem('admin_aff_link', newLink);
+          currentAffiliateLink = newLink;
+        }
+        if (newText) {
+          localStorage.setItem('admin_aff_text', newText);
+          currentAffiliateText = newText;
+          document.getElementById('adText').innerText = newText;
+        }
+        alert('Update ho gaya!');
+      } else if (pass !== null) {
+        alert('Galat Password!');
+      }
+    }
+
+    window.onload = () => {
+      document.getElementById('adText').innerText = currentAffiliateText;
+      if (localStorage.getItem('nosim_dark') === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (myUsername) {
+        initApp(myUsername);
+        loadSavedMessages();
+      }
+    };
+
+    function saveAndStart() {
+      const val = document.getElementById('usernameInput').value.trim().toLowerCase();
+      if (!val) return alert('Username likhna zaroori hai!');
+      localStorage.setItem('nosim_user', val);
+      myUsername = val;
+      initApp(val);
+    }
+
+    function initApp(username) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('chatScreen').style.display = 'flex';
+      document.getElementById('topActions').style.display = 'flex';
+      document.getElementById('myIdDisplay').innerText = '@' + username;
+
+      peer = new Peer('nosim_' + username);
+
+      peer.on('open', () => {
+        addSysMsg('Aap Online hain (@' + username + ')');
+      });
+
+      peer.on('connection', (conn) => {
+        currentConn = conn;
+        const sender = conn.peer.replace('nosim_', '');
+        document.getElementById('friendIdInput').value = sender;
+        setupChat(sender);
+      });
+
+      peer.on('call', async (call) => {
+        if (confirm('Incoming Voice Call! Uthana chahte hain?')) {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          call.answer(localStream);
+          handleCall(call);
+        }
+      });
+    }
+
+    function connectToFriend() {
+      const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
+      if (!friend) return alert('Dost ka username dalein!');
+      currentConn = peer.connect('nosim_' + friend);
+      setupChat(friend);
+    }
+
+    function createGroup() {
+      const groupName = prompt('Group ka naam ya Code dalein:');
+      if (!groupName) return;
+      document.getElementById('friendIdInput').value = groupName;
+      addSysMsg('Group "' + groupName + '" ban gaya!');
+    }
+
+    function setupChat(friendName) {
+      currentConn.on('open', () => {
+        addSysMsg('Connected with @' + friendName);
+      });
+      currentConn.on('data', (data) => {
+        if (data.type === 'text') addMsg(data.content, 'friend', false, true);
+        if (data.type === 'image') addMsg(data.content, 'friend', true, true);
+      });
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const text = input.value.trim();
+      if (!text) return;
+      if (!currentConn || !currentConn.open) return alert('Pehle connect karein!');
+      
+      currentConn.send({ type: 'text', content: text });
+      addMsg(text, 'me', false, true);
+      input.value = '';
+    }
+
+    function sendPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!currentConn || !currentConn.open) return alert('Pehle connect karein!');
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        currentConn.send({ type: 'image', content: reader.result });
+        addMsg(reader.result, 'me', true, true);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function startVoiceCall() {
+      const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
+      if (!friend) return alert('Dost ka username dalein!');
+      try {
+        currentCall = peer.call('nosim_' + friend, await navigator.mediaDevices.getUserMedia({ audio: true }));
+        alert('Voice Call lag rahi hai...');
+        currentCall.on('stream', (stream) => document.getElementById('remoteAudio').srcObject = stream);
+      } catch (e) {
+        alert('Mic permission on karein!');
+      }
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('nosim_dark', document.body.classList.contains('dark-mode'));
+    }
+
+    function addMsg(content, side, isImage = false, save = false) {
+      const box = document.getElementById('messageBox');
+      const div = document.createElement('div');
+      div.className = 'msg ' + side;
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (isImage) {
+        div.innerHTML = `<img src="${content}"><div class="time">${time}</div>`;
+      } else {
+        div.innerHTML = `<div>${content}</div><div class="time">${time}</div>`;
+      }
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+
+      if (save && !isImage) {
+        let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
+        history.push({ content, side, time });
+        localStorage.setItem('nosim_chats', JSON.stringify(history.slice(-50)));
+      }
+    }
+
+    function addSysMsg(text) {
+      const box = document.getElementById('messageBox');
+      const div = document.createElement('div');
+      div.className = 'msg sys';
+      div.innerText = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function loadSavedMessages() {
+      let history = JSON.parse(localStorage.getItem('nosim_chats') || '[]');
+      history.forEach(m => addMsg(m.content, m.side, false, false));
+    }
+
+    function logout() {
+      if (confirm('Logout karein?')) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
 
