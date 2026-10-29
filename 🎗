@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoSIM Chat</title>
+  <!-- Bina server ke live chat ke liye PeerJS -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: #ece5dd; height: 100vh; display: flex; flex-direction: column; }
+    .header { background: #075e54; color: white; padding: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .screen { flex: 1; display: flex; flex-direction: column; padding: 20px; justify-content: center; }
+    .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); text-align: center; }
+    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+    button { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    #chatScreen { display: none; flex: 1; flex-direction: column; height: 100%; overflow: hidden; }
+    .connect-bar { background: #fff; padding: 10px; display: flex; gap: 8px; border-bottom: 1px solid #ddd; }
+    .connect-bar input { margin: 0; flex: 1; padding: 8px; }
+    .connect-bar button { width: auto; padding: 8px 15px; background: #128c7e; }
+    .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .msg { max-width: 75%; padding: 10px 14px; border-radius: 10px; font-size: 15px; word-wrap: break-word; }
+    .me { background: #dcf8c6; align-self: flex-end; }
+    .friend { background: white; align-self: flex-start; }
+    .sys { background: #ffeecd; align-self: center; font-size: 12px; padding: 5px 10px; border-radius: 5px; }
+    .bottom-bar { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; }
+    .bottom-bar input { margin: 0; flex: 1; border-radius: 20px; padding: 10px 15px; }
+    .bottom-bar button { width: auto; border-radius: 20px; padding: 10px 20px; background: #075e54; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span>NoSIM Chat</span>
+    <span id="myIdDisplay" style="font-size: 14px; font-weight: normal;"></span>
+  </div>
+
+  <!-- Screen 1: Bina SIM ke Username banana -->
+  <div id="loginScreen" class="screen">
+    <div class="box">
+      <h2>Apni Unique ID Banayein</h2>
+      <p style="color:#666; font-size:14px; margin-top:5px;">Bina phone number ya SIM ke</p>
+      <input type="text" id="usernameInput" placeholder="Apna Username likhein (e.g. rahul99)">
+      <button onclick="startApp()">Chalu Karein</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: WhatsApp Style Chat Screen -->
+  <div id="chatScreen">
+    <div class="connect-bar">
+      <input type="text" id="friendIdInput" placeholder="Dost ka Username dalein...">
+      <button onclick="connectToFriend()">Jodein</button>
+    </div>
+
+    <div class="messages" id="messageBox">
+      <div class="msg sys">Apne dost ka username upar daal kar 'Jodein' dabayein!</div>
+    </div>
+
+    <div class="bottom-bar">
+      <input type="text" id="msgInput" placeholder="Message likhein...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    let peer;
+    let currentConn;
+
+    function startApp() {
+      const username = document.getElementById('usernameInput').value.trim().toLowerCase();
+      if (!username) return alert('Kripya apna username likhein!');
+
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('chatScreen').style.display = 'flex';
+      document.getElementById('myIdDisplay').innerText = 'My ID: @' + username;
+
+      // Unique ID banana
+      peer = new Peer('nosim_' + username);
+
+      peer.on('open', () => {
+        addMsg('Aapki ID (@' + username + ') chalu ho gayi hai!', 'sys');
+      });
+
+      peer.on('connection', (conn) => {
+        currentConn = conn;
+        setupChat(conn.peer.replace('nosim_', ''));
+      });
+
+      peer.on('error', (err) => {
+        alert('Error: Ye username kisi aur ne le liya hai ya internet slow hai.');
+      });
+    }
+
+    function connectToFriend() {
+      const friend = document.getElementById('friendIdInput').value.trim().toLowerCase();
+      if (!friend) return alert('Dost ka username dalein!');
+      currentConn = peer.connect('nosim_' + friend);
+      setupChat(friend);
+    }
+
+    function setupChat(friendName) {
+      currentConn.on('open', () => {
+        addMsg('Aap @' + friendName + ' se jud gaye hain! Ab baat karein.', 'sys');
+      });
+      currentConn.on('data', (data) => {
+        addMsg(data, 'friend');
+      });
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const text = input.value.trim();
+      if (!text) return;
+      if (!currentConn || !currentConn.open) {
+        return alert('Pehle upar dost ka username daal kar Jodein!');
+      }
+      currentConn.send(text);
+      addMsg(text, 'me');
+      input.value = '';
+    }
+
+    function addMsg(text, type) {
+      const box = document.getElementById('messageBox');
+      const div = document.createElement('div');
+      div.className = 'msg ' + type;
+      div.innerText = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+  </script>
+</body>
+</html>
