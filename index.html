@@ -1,168 +1,106 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creatorhub Mahtab</title>
-    <!-- PeerJS Library -->
+    <title>WhatsApp Style P2P Chat</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#075e54">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root {
-            --bg-main: #f4f6fb;
-            --bg-card: #ffffff;
-            --primary: #5b21b6;
-            --primary-light: #7c3aed;
-            --accent: #ec4899;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --msg-sent: #ede9fe;
-            --msg-rec: #ffffff;
-            --border: #e2e8f0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #f0f2f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        body.dark-mode {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --primary: #4c1d95;
-            --primary-light: #8b5cf6;
-            --accent: #f43f5e;
-            --text-dark: #f8fafc;
-            --text-muted: #94a3b8;
-            --msg-sent: #3b0764;
-            --msg-rec: #334155;
-            --border: #334155;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background 0.2s, color 0.2s; }
-        body { background-color: var(--bg-main); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        /* Login / Username Modal */
+        #login-screen { position: fixed; inset: 0; background: #075e54; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .login-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .login-box h3 { color: #075e54; margin-bottom: 10px; }
+        .login-box p { font-size: 13px; color: #666; margin-bottom: 15px; }
+        .login-box input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 16px; outline: none; }
+        .login-box button { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
         /* Header */
-        .header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .brand-title { font-size: 19px; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-        .header-icons { display: flex; gap: 10px; align-items: center; }
-        .icon-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-        .icon-btn:hover { background: rgba(255,255,255,0.35); }
+        .header { background-color: #075e54; color: white; padding: 10px 15px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .header h2 { font-size: 17px; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .my-id-box { background: #128c7e; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+        #install-btn { background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }
 
-        .user-bar { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 8px; }
-        .copy-badge { background: var(--accent); padding: 3px 8px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* Tabs */
+        .tabs { display: flex; background-color: #075e54; color: #b3d4d0; font-weight: bold; font-size: 14px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab.active { color: white; border-bottom: 3px solid #25d366; }
 
-        /* Affiliate Ad Banner */
-        .ad-banner { background: linear-gradient(90deg, #ff8a00, #e52e71); color: white; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .ad-banner a { background: white; color: #e52e71; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 12px; font-weight: 800; white-space: nowrap; margin-left: 10px; }
+        /* Controls Bar */
+        .controls { background: white; padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+        .controls input { flex: 1; min-width: 150px; padding: 9px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        .btn { padding: 9px 14px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-connect { background-color: #128c7e; }
+        .btn-call { background-color: #25d366; }
+        .btn-end { background-color: #dc3545; display: none; }
 
-        /* Navigation Tabs */
-        .tabs { display: flex; background-color: var(--bg-card); border-bottom: 1px solid var(--border); }
-        .tab { flex: 1; text-align: center; padding: 11px; cursor: pointer; font-weight: 700; font-size: 13px; color: var(--text-muted); border-bottom: 3px solid transparent; }
-        .tab.active { color: var(--primary-light); border-bottom: 3px solid var(--primary-light); }
-
-        /* Controls */
-        .controls { background: var(--bg-card); padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-        .controls input { flex: 1; min-width: 150px; padding: 9px 14px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-dark); border-radius: 20px; outline: none; font-size: 13px; }
-        .btn { padding: 9px 14px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .btn-connect { background-color: var(--primary-light); }
-        .btn-call { background-color: #10b981; }
-        .btn-end { background-color: #ef4444; display: none; }
-
-        #call-status { background: #fef08a; color: #854d0e; text-align: center; padding: 7px; font-size: 13px; display: none; font-weight: bold; }
-        #group-info { background: var(--bg-card); padding: 6px 15px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); display: none; }
+        #call-status { background: #ffeeba; color: #856404; text-align: center; padding: 8px; font-size: 14px; display: none; font-weight: bold; }
+        #group-info { background: #fff; padding: 6px 15px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; display: none; }
 
         /* Chat Area */
-        .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.4; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .msg.sent { background-color: var(--msg-sent); color: var(--text-dark); align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg.received { background-color: var(--msg-rec); color: var(--text-dark); align-self: flex-start; border-bottom-left-radius: 2px; }
-        .msg-sender { font-size: 11px; color: var(--accent); font-weight: bold; margin-bottom: 4px; }
-        .system-msg { align-self: center; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); font-size: 11px; padding: 5px 12px; border-radius: 15px; text-align: center; }
+        .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #e5ddd5; }
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 10px; font-size: 14px; word-wrap: break-word; }
+        .msg.sent { background-color: #dcf8c6; align-self: flex-end; }
+        .msg.received { background-color: white; align-self: flex-start; }
+        .msg-sender { font-size: 11px; color: #075e54; font-weight: bold; margin-bottom: 3px; }
+        .system-msg { align-self: center; background: #d1eaed; color: #333; font-size: 12px; padding: 5px 12px; border-radius: 12px; text-align: center; }
 
         /* Input Area */
-        .input-area { background: var(--bg-card); padding: 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--border); }
-        .input-area input { flex: 1; padding: 11px 15px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-dark); border-radius: 25px; outline: none; font-size: 14px; }
-        .btn-send { background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: white; border: none; cursor: pointer; font-size: 16px; }
-
-        /* Modals (Username & Admin Panel) */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
-        .modal-box { background: var(--bg-card); color: var(--text-dark); width: 100%; max-width: 360px; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 12px; }
-        .modal-box h3 { font-size: 18px; color: var(--primary-light); }
-        .modal-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-dark); border-radius: 8px; outline: none; }
-        .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 5px; }
+        .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; }
+        .input-area input { flex: 1; padding: 12px 15px; border: none; border-radius: 25px; outline: none; font-size: 15px; }
+        .btn-send { background-color: #075e54; border-radius: 50%; width: 42px; height: 42px; color: white; border: none; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <!-- 1. Username Setup Modal -->
-    <div class="modal" id="username-modal">
-        <div class="modal-box">
-            <h3>Welcome to Creatorhub Mahtab</h3>
-            <p style="font-size: 13px; color: var(--text-muted);">Chat shuru karne ke liye apna ek unique Username banayein (bina space ke):</p>
-            <input type="text" id="username-input" placeholder="e.g. mahtab07, rahul_99">
-            <button class="btn btn-connect" style="width: 100%; padding: 11px;" onclick="registerUsername()">Start App 🚀</button>
+    <!-- 1. Username Login Screen -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h3>WhatsApp Style Chat</h3>
+            <p>Apna Username daalein (Yahi aapki Chat ID hogi)</p>
+            <input type="text" id="username-input" placeholder="Jaise: rahul123" onkeypress="if(event.key==='Enter') startApp()">
+            <button onclick="startApp()" id="start-btn">Start Chatting 🚀</button>
         </div>
     </div>
 
-    <!-- 2. Password Protected Affiliate Admin Modal -->
-    <div class="modal" id="admin-modal" style="display: none;">
-        <div class="modal-box">
-            <h3>🔒 Affiliate Link Manager</h3>
-            <input type="password" id="admin-pass" placeholder="Admin Password daalein...">
-            <input type="text" id="ad-title-input" placeholder="Offer ka naam (e.g. 🔥 Best Earbuds 80% Off!)">
-            <input type="url" id="ad-url-input" placeholder="Affiliate Link (https://...)">
-            <hr style="border: 0; border-top: 1px solid var(--border);">
-            <input type="password" id="new-pass-input" placeholder="Naya Password set karein (Optional)">
-            <div class="modal-btns">
-                <button class="btn" style="background: #64748b;" onclick="closeAdmin()">Cancel</button>
-                <button class="btn btn-connect" onclick="saveAffiliateAd()">Save & Live</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Header -->
+    <!-- 2. Main App Screen -->
     <div class="header">
         <div class="header-top">
-            <div class="brand-title">✨ Creatorhub Mahtab</div>
-            <div class="header-icons">
-                <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Dark/Light Mode">🌙</button>
-                <button class="icon-btn" onclick="openAdmin()" title="Add Affiliate Link (Password)">🔒</button>
+            <h2>WhatsApp Chat</h2>
+            <div class="header-actions">
+                <button id="install-btn" onclick="installPWA()">📲 Install App</button>
+                <div class="my-id-box" onclick="copyMyId()" id="my-id">Connecting...</div>
             </div>
         </div>
-        <div class="user-bar">
-            <span id="my-username-display">Username: Setting up...</span>
-            <span class="copy-badge" onclick="copyUsername()">Copy Username 📋</span>
-        </div>
     </div>
 
-    <!-- Affiliate Ad Banner -->
-    <div class="ad-banner" id="ad-banner">
-        <span id="ad-text">🔥 Deal of the Day: Check My Recommended Products!</span>
-        <a id="ad-link" href="https://amazon.in" target="_blank">Buy Now 🛒</a>
-    </div>
-
-    <!-- Mode Tabs -->
     <div class="tabs">
-        <div class="tab active" id="tab-single" onclick="switchMode('single')">PRIVATE CHAT</div>
-        <div class="tab" id="tab-group" onclick="switchMode('group')">GROUP HUB</div>
+        <div class="tab active" id="tab-single" onclick="switchMode('single')">CHATS (1-ON-1)</div>
+        <div class="tab" id="tab-group" onclick="switchMode('group')">GROUPS</div>
     </div>
 
-    <!-- Connection Controls -->
     <div class="controls">
-        <input type="text" id="friend-id" placeholder="Dost ka Username daalein...">
-        <button class="btn btn-connect" id="connect-btn" onclick="connectPeer()">Connect</button>
+        <input type="text" id="friend-id" placeholder="Friend ka Username/ID daalein...">
+        <button class="btn btn-connect" id="connect-btn" onclick="connectPeer()">Join Chat</button>
         <button class="btn btn-call" id="call-btn" onclick="startCall()">Call 📞</button>
         <button class="btn btn-end" id="end-btn" onclick="endCall()">End ❌</button>
     </div>
 
-    <div id="call-status">Audio Call Chal Rahi Hai... 🔊</div>
-    <div id="group-info">Connected Group Friends: <span id="member-count">0</span></div>
+    <div id="call-status">Call chal rahi hai... 🔊</div>
+    <div id="group-info">Group Members Connected: <span id="member-count">0</span></div>
 
-    <!-- Chat Messages -->
     <div class="chat-container" id="chat-box">
-        <div class="system-msg">Welcome to Creatorhub Mahtab! Apna Username dost ko bhejein aur bina SIM ke free baat karein.</div>
+        <div class="system-msg">Apna Username dost ko bhejein ya unka Username upar daal kar 'Join Chat' dabayein.</div>
     </div>
 
-    <!-- Bottom Input -->
     <div class="input-area">
-        <input type="text" id="msg-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <input type="text" id="msg-input" placeholder="Message likhein..." onkeypress="if(event.key==='Enter') sendMessage()">
         <button class="btn-send" onclick="sendMessage()">➤</button>
     </div>
 
@@ -170,10 +108,221 @@
 
     <script>
         let peer = null;
-        let myUsername = "";
+        let myId = "";
+        let myName = "";
         let currentMode = 'single';
         let singleConn = null;
         let groupConns = [];
         let activeCall = null;
         let localStream = null;
 
+        // Start App on Username Submit
+        function startApp() {
+            const rawInput = document.getElementById('username-input').value.trim();
+            if (!rawInput) {
+                alert("Kripya pehle apna Username likhein!");
+                return;
+            }
+
+            // Space aur special characters hatana taaki PeerJS hang na ho
+            const cleanId = rawInput.toLowerCase().replace(/[^a-z0-9_-]/g, '') + "-" + Math.floor(100 + Math.random() * 900);
+            myName = rawInput;
+
+            // Login screen turant band karein taaki app atke nahi
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('my-id').innerText = "ID: " + cleanId + " 📋";
+            myId = cleanId;
+
+            initPeer(cleanId);
+        }
+
+        function initPeer(customId) {
+            peer = new Peer(customId);
+
+            peer.on('open', (id) => {
+                myId = id;
+                document.getElementById('my-id').innerText = "ID: " + id + " 📋";
+                addSystemMsg("Aap online hain! Aapki ID hai: " + id);
+            });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                if (err.type === 'unavailable-id') {
+                    // Agar ID pehle se occupied hai toh random ID de dein
+                    peer = new Peer();
+                    peer.on('open', (id) => {
+                        myId = id;
+                        document.getElementById('my-id').innerText = "ID: " + id + " 📋";
+                    });
+                } else {
+                    addSystemMsg("Notice: Dost ki ID galat hai ya wo abhi offline hai.");
+                }
+            });
+
+            peer.on('connection', (conn) => setupConnection(conn));
+
+            peer.on('call', async (call) => {
+                if (confirm("Dost ka Audio Call aa raha hai. Uthayein?")) {
+                    try {
+                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        call.answer(localStream);
+                        handleCall(call);
+                    } catch (e) { alert("Mic permission allow karein!"); }
+                } else {
+                    call.close();
+                }
+            });
+        }
+
+        function copyMyId() {
+            navigator.clipboard.writeText(myId);
+            alert("Aapki ID (" + myId + ") copy ho gayi! Dost ko bhejein.");
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tab-single').classList.toggle('active', mode === 'single');
+            document.getElementById('tab-group').classList.toggle('active', mode === 'group');
+            document.getElementById('group-info').style.display = mode === 'group' ? 'block' : 'none';
+            document.getElementById('connect-btn').innerText = mode === 'group' ? 'Add Member' : 'Join Chat';
+        }
+
+        function connectPeer() {
+            const friendId = document.getElementById('friend-id').value.trim();
+            if (!friendId || friendId === myId) return alert("Dost ki sahi ID daalein!");
+            const conn = peer.connect(friendId);
+            setupConnection(conn);
+            document.getElementById('friend-id').value = "";
+        }
+
+        function setupConnection(conn) {
+            conn.on('open', () => {
+                if (currentMode === 'single') {
+                    singleConn = conn;
+                    addSystemMsg("Connected with: " + conn.peer);
+                } else {
+                    if (!groupConns.find(c => c.peer === conn.peer)) {
+                        groupConns.push(conn);
+                        document.getElementById('member-count').innerText = groupConns.length;
+                        addSystemMsg(conn.peer + " group mein jud gaya!");
+                    }
+                }
+            });
+
+            conn.on('data', (data) => {
+                displayMessage(data.text, 'received', data.sender);
+                if (currentMode === 'group' && !data.forwarded) {
+                    groupConns.forEach(c => {
+                        if (c.peer !== conn.peer && c.open) {
+                            c.send({ text: data.text, sender: data.sender, forwarded: true });
+                        }
+                    });
+                }
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const payload = { text: text, sender: myName || myId };
+
+            if (currentMode === 'single') {
+                if (singleConn && singleConn.open) {
+                    singleConn.send(payload);
+                    displayMessage(text, 'sent', 'You');
+                } else {
+                    return alert("Pehle dost ki ID daal kar 'Join Chat' dabayein!");
+                }
+            } else {
+                if (groupConns.length > 0) {
+                    groupConns.forEach(c => { if (c.open) c.send(payload); });
+                    displayMessage(text, 'sent', 'You (Group)');
+                } else {
+                    return alert("Group mein pehle kisi dost ko Add karein!");
+                }
+            }
+            input.value = "";
+        }
+
+        function displayMessage(text, type, sender) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = `<div class="msg-sender">${sender}</div><div>${text}</div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function addSystemMsg(text) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = 'system-msg';
+            div.innerText = text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Calling Functions
+        async function startCall() {
+            let targetId = document.getElementById('friend-id').value.trim();
+            if (!targetId && singleConn) targetId = singleConn.peer;
+            if (!targetId) return alert("Call ke liye dost ki ID daalein!");
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const call = peer.call(targetId, localStream);
+                handleCall(call);
+            } catch (e) { alert("Mic permission allow karein!"); }
+        }
+
+        function handleCall(call) {
+            activeCall = call;
+            document.getElementById('call-btn').style.display = 'none';
+            document.getElementById('end-btn').style.display = 'inline-block';
+            document.getElementById('call-status').style.display = 'block';
+
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remote-audio').srcObject = remoteStream;
+            });
+            call.on('close', () => endCall());
+        }
+
+        function endCall() {
+            if (activeCall) activeCall.close();
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            activeCall = null;
+            document.getElementById('call-btn').style.display = 'inline-block';
+            document.getElementById('end-btn').style.display = 'none';
+            document.getElementById('call-status').style.display = 'none';
+            addSystemMsg("Call Ended.");
+        }
+
+        // PWA Install Button Logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'inline-block';
+        });
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') installBtn.style.display = 'none';
+                deferredPrompt = null;
+            } else {
+                alert("App install karne ke liye Chrome ke upar 3 dots (⋮) par click karein aur 'Add to Home screen' ya 'Install app' chunein.");
+            }
+        }
+    </script>
+</body>
+</html>
