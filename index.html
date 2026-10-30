@@ -1,328 +1,326 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Style P2P Chat</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#075e54">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #f0f2f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* Login / Username Modal */
-        #login-screen { position: fixed; inset: 0; background: #075e54; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .login-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        .login-box h3 { color: #075e54; margin-bottom: 10px; }
-        .login-box p { font-size: 13px; color: #666; margin-bottom: 15px; }
-        .login-box input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 16px; outline: none; }
-        .login-box button { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>WhatsApp Style P2P Chat</title>  
+    <link rel="manifest" href="manifest.json">  
+    <meta name="theme-color" content="#075e54">  
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>  
+    <style>  
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }  
+        body { background-color: #f0f2f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }  /* Login / Username Modal */  
+    #login-screen { position: fixed; inset: 0; background: #075e54; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }  
+    .login-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }  
+    .login-box h3 { color: #075e54; margin-bottom: 10px; }  
+    .login-box p { font-size: 13px; color: #666; margin-bottom: 15px; }  
+    .login-box input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 16px; outline: none; }  
+    .login-box button { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }  
 
-        /* Header */
-        .header { background-color: #075e54; color: white; padding: 10px 15px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .header h2 { font-size: 17px; }
-        .header-actions { display: flex; gap: 8px; align-items: center; }
-        .my-id-box { background: #128c7e; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-        #install-btn { background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }
+    /* Header */  
+    .header { background-color: #075e54; color: white; padding: 10px 15px; }  
+    .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }  
+    .header h2 { font-size: 17px; }  
+    .header-actions { display: flex; gap: 8px; align-items: center; }  
+    .my-id-box { background: #128c7e; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }  
+    #install-btn { background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }  
 
-        /* Tabs */
-        .tabs { display: flex; background-color: #075e54; color: #b3d4d0; font-weight: bold; font-size: 14px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-bottom: 3px solid transparent; }
-        .tab.active { color: white; border-bottom: 3px solid #25d366; }
+    /* Tabs */  
+    .tabs { display: flex; background-color: #075e54; color: #b3d4d0; font-weight: bold; font-size: 14px; }  
+    .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-bottom: 3px solid transparent; }  
+    .tab.active { color: white; border-bottom: 3px solid #25d366; }  
 
-        /* Controls Bar */
-        .controls { background: white; padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
-        .controls input { flex: 1; min-width: 150px; padding: 9px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-        .btn { padding: 9px 14px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .btn-connect { background-color: #128c7e; }
-        .btn-call { background-color: #25d366; }
-        .btn-end { background-color: #dc3545; display: none; }
+    /* Controls Bar */  
+    .controls { background: white; padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #ddd; flex-wrap: wrap; }  
+    .controls input { flex: 1; min-width: 150px; padding: 9px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; }  
+    .btn { padding: 9px 14px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }  
+    .btn-connect { background-color: #128c7e; }  
+    .btn-call { background-color: #25d366; }  
+    .btn-end { background-color: #dc3545; display: none; }  
 
-        #call-status { background: #ffeeba; color: #856404; text-align: center; padding: 8px; font-size: 14px; display: none; font-weight: bold; }
-        #group-info { background: #fff; padding: 6px 15px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; display: none; }
+    #call-status { background: #ffeeba; color: #856404; text-align: center; padding: 8px; font-size: 14px; display: none; font-weight: bold; }  
+    #group-info { background: #fff; padding: 6px 15px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; display: none; }  
 
-        /* Chat Area */
-        .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #e5ddd5; }
-        .msg { max-width: 75%; padding: 8px 12px; border-radius: 10px; font-size: 14px; word-wrap: break-word; }
-        .msg.sent { background-color: #dcf8c6; align-self: flex-end; }
-        .msg.received { background-color: white; align-self: flex-start; }
-        .msg-sender { font-size: 11px; color: #075e54; font-weight: bold; margin-bottom: 3px; }
-        .system-msg { align-self: center; background: #d1eaed; color: #333; font-size: 12px; padding: 5px 12px; border-radius: 12px; text-align: center; }
+    /* Chat Area */  
+    .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #e5ddd5; }  
+    .msg { max-width: 75%; padding: 8px 12px; border-radius: 10px; font-size: 14px; word-wrap: break-word; }  
+    .msg.sent { background-color: #dcf8c6; align-self: flex-end; }  
+    .msg.received { background-color: white; align-self: flex-start; }  
+    .msg-sender { font-size: 11px; color: #075e54; font-weight: bold; margin-bottom: 3px; }  
+    .system-msg { align-self: center; background: #d1eaed; color: #333; font-size: 12px; padding: 5px 12px; border-radius: 12px; text-align: center; }  
 
-        /* Input Area */
-        .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; }
-        .input-area input { flex: 1; padding: 12px 15px; border: none; border-radius: 25px; outline: none; font-size: 15px; }
-        .btn-send { background-color: #075e54; border-radius: 50%; width: 42px; height: 42px; color: white; border: none; cursor: pointer; font-size: 18px; }
-    </style>
-</head>
-<body>
+    /* Input Area */  
+    .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; }  
+    .input-area input { flex: 1; padding: 12px 15px; border: none; border-radius: 25px; outline: none; font-size: 15px; }  
+    .btn-send { background-color: #075e54; border-radius: 50%; width: 42px; height: 42px; color: white; border: none; cursor: pointer; font-size: 18px; }  
+</style>
 
-    <!-- 1. Username Login Screen -->
-    <div id="login-screen">
-        <div class="login-box">
-            <h3>WhatsApp Style Chat</h3>
-            <p>Apna Username daalein (Yahi aapki Chat ID hogi)</p>
-            <input type="text" id="username-input" placeholder="Jaise: rahul123" onkeypress="if(event.key==='Enter') startApp()">
-            <button onclick="startApp()" id="start-btn">Start Chatting 🚀</button>
-        </div>
-    </div>
+</head>  
+<body>  <!-- 1. Username Login Screen -->  
+<div id="login-screen">  
+    <div class="login-box">  
+        <h3>WhatsApp Style Chat</h3>  
+        <p>Apna Username daalein (Yahi aapki Chat ID hogi)</p>  
+        <input type="text" id="username-input" placeholder="Jaise: rahul123" onkeypress="if(event.key==='Enter') startApp()">  
+        <button onclick="startApp()" id="start-btn">Start Chatting 🚀</button>  
+    </div>  
+</div>  
 
-    <!-- 2. Main App Screen -->
-    <div class="header">
-        <div class="header-top">
-            <h2>WhatsApp Chat</h2>
-            <div class="header-actions">
-                <button id="install-btn" onclick="installPWA()">📲 Install App</button>
-                <div class="my-id-box" onclick="copyMyId()" id="my-id">Connecting...</div>
-            </div>
-        </div>
-    </div>
+<!-- 2. Main App Screen -->  
+<div class="header">  
+    <div class="header-top">  
+        <h2>WhatsApp Chat</h2>  
+        <div class="header-actions">  
+            <button id="install-btn" onclick="installPWA()">📲 Install App</button>  
+            <div class="my-id-box" onclick="copyMyId()" id="my-id">Connecting...</div>  
+        </div>  
+    </div>  
+</div>  
 
-    <div class="tabs">
-        <div class="tab active" id="tab-single" onclick="switchMode('single')">CHATS (1-ON-1)</div>
-        <div class="tab" id="tab-group" onclick="switchMode('group')">GROUPS</div>
-    </div>
+<div class="tabs">  
+    <div class="tab active" id="tab-single" onclick="switchMode('single')">CHATS (1-ON-1)</div>  
+    <div class="tab" id="tab-group" onclick="switchMode('group')">GROUPS</div>  
+</div>  
 
-    <div class="controls">
-        <input type="text" id="friend-id" placeholder="Friend ka Username/ID daalein...">
-        <button class="btn btn-connect" id="connect-btn" onclick="connectPeer()">Join Chat</button>
-        <button class="btn btn-call" id="call-btn" onclick="startCall()">Call 📞</button>
-        <button class="btn btn-end" id="end-btn" onclick="endCall()">End ❌</button>
-    </div>
+<div class="controls">  
+    <input type="text" id="friend-id" placeholder="Friend ka Username/ID daalein...">  
+    <button class="btn btn-connect" id="connect-btn" onclick="connectPeer()">Join Chat</button>  
+    <button class="btn btn-call" id="call-btn" onclick="startCall()">Call 📞</button>  
+    <button class="btn btn-end" id="end-btn" onclick="endCall()">End ❌</button>  
+</div>  
 
-    <div id="call-status">Call chal rahi hai... 🔊</div>
-    <div id="group-info">Group Members Connected: <span id="member-count">0</span></div>
+<div id="call-status">Call chal rahi hai... 🔊</div>  
+<div id="group-info">Group Members Connected: <span id="member-count">0</span></div>  
 
-    <div class="chat-container" id="chat-box">
-        <div class="system-msg">Apna Username dost ko bhejein ya unka Username upar daal kar 'Join Chat' dabayein.</div>
-    </div>
+<div class="chat-container" id="chat-box">  
+    <div class="system-msg">Apna Username dost ko bhejein ya unka Username upar daal kar 'Join Chat' dabayein.</div>  
+</div>  
 
-    <div class="input-area">
-        <input type="text" id="msg-input" placeholder="Message likhein..." onkeypress="if(event.key==='Enter') sendMessage()">
-        <button class="btn-send" onclick="sendMessage()">➤</button>
-    </div>
+<div class="input-area">  
+    <input type="text" id="msg-input" placeholder="Message likhein..." onkeypress="if(event.key==='Enter') sendMessage()">  
+    <button class="btn-send" onclick="sendMessage()">➤</button>  
+</div>  
 
-    <audio id="remote-audio" autoplay></audio>
+<audio id="remote-audio" autoplay></audio>  
 
-    <script>
-        let peer = null;
-        let myId = "";
-        let myName = "";
-        let currentMode = 'single';
-        let singleConn = null;
-        let groupConns = [];
-        let activeCall = null;
-        let localStream = null;
+<script>  
+    let peer = null;  
+    let myId = "";  
+    let myName = "";  
+    let currentMode = 'single';  
+    let singleConn = null;  
+    let groupConns = [];  
+    let activeCall = null;  
+    let localStream = null;  
 
-        // Start App on Username Submit
-        function startApp() {
-            const rawInput = document.getElementById('username-input').value.trim();
-            if (!rawInput) {
-                alert("Kripya pehle apna Username likhein!");
-                return;
-            }
+    // Start App on Username Submit  
+    function startApp() {  
+        const rawInput = document.getElementById('username-input').value.trim();  
+        if (!rawInput) {  
+            alert("Kripya pehle apna Username likhein!");  
+            return;  
+        }  
 
-            // Space aur special characters hatana taaki PeerJS hang na ho
-            const cleanId = rawInput.toLowerCase().replace(/[^a-z0-9_-]/g, '') + "-" + Math.floor(100 + Math.random() * 900);
-            myName = rawInput;
+        // Space aur special characters hatana taaki PeerJS hang na ho  
+        const cleanId = rawInput.toLowerCase().replace(/[^a-z0-9_-]/g, '') + "-" + Math.floor(100 + Math.random() * 900);  
+        myName = rawInput;  
 
-            // Login screen turant band karein taaki app atke nahi
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('my-id').innerText = "ID: " + cleanId + " 📋";
-            myId = cleanId;
+        // Login screen turant band karein taaki app atke nahi  
+        document.getElementById('login-screen').style.display = 'none';  
+        document.getElementById('my-id').innerText = "ID: " + cleanId + " 📋";  
+        myId = cleanId;  
 
-            initPeer(cleanId);
-        }
+        initPeer(cleanId);  
+    }  
 
-        function initPeer(customId) {
-            peer = new Peer(customId);
+    function initPeer(customId) {  
+        peer = new Peer(customId);  
 
-            peer.on('open', (id) => {
-                myId = id;
-                document.getElementById('my-id').innerText = "ID: " + id + " 📋";
-                addSystemMsg("Aap online hain! Aapki ID hai: " + id);
-            });
+        peer.on('open', (id) => {  
+            myId = id;  
+            document.getElementById('my-id').innerText = "ID: " + id + " 📋";  
+            addSystemMsg("Aap online hain! Aapki ID hai: " + id);  
+        });  
 
-            peer.on('error', (err) => {
-                console.error(err);
-                if (err.type === 'unavailable-id') {
-                    // Agar ID pehle se occupied hai toh random ID de dein
-                    peer = new Peer();
-                    peer.on('open', (id) => {
-                        myId = id;
-                        document.getElementById('my-id').innerText = "ID: " + id + " 📋";
-                    });
-                } else {
-                    addSystemMsg("Notice: Dost ki ID galat hai ya wo abhi offline hai.");
-                }
-            });
+        peer.on('error', (err) => {  
+            console.error(err);  
+            if (err.type === 'unavailable-id') {  
+                // Agar ID pehle se occupied hai toh random ID de dein  
+                peer = new Peer();  
+                peer.on('open', (id) => {  
+                    myId = id;  
+                    document.getElementById('my-id').innerText = "ID: " + id + " 📋";  
+                });  
+            } else {  
+                addSystemMsg("Notice: Dost ki ID galat hai ya wo abhi offline hai.");  
+            }  
+        });  
 
-            peer.on('connection', (conn) => setupConnection(conn));
+        peer.on('connection', (conn) => setupConnection(conn));  
 
-            peer.on('call', async (call) => {
-                if (confirm("Dost ka Audio Call aa raha hai. Uthayein?")) {
-                    try {
-                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        call.answer(localStream);
-                        handleCall(call);
-                    } catch (e) { alert("Mic permission allow karein!"); }
-                } else {
-                    call.close();
-                }
-            });
-        }
+        peer.on('call', async (call) => {  
+            if (confirm("Dost ka Audio Call aa raha hai. Uthayein?")) {  
+                try {  
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });  
+                    call.answer(localStream);  
+                    handleCall(call);  
+                } catch (e) { alert("Mic permission allow karein!"); }  
+            } else {  
+                call.close();  
+            }  
+        });  
+    }  
 
-        function copyMyId() {
-            navigator.clipboard.writeText(myId);
-            alert("Aapki ID (" + myId + ") copy ho gayi! Dost ko bhejein.");
-        }
+    function copyMyId() {  
+        navigator.clipboard.writeText(myId);  
+        alert("Aapki ID (" + myId + ") copy ho gayi! Dost ko bhejein.");  
+    }  
 
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('tab-single').classList.toggle('active', mode === 'single');
-            document.getElementById('tab-group').classList.toggle('active', mode === 'group');
-            document.getElementById('group-info').style.display = mode === 'group' ? 'block' : 'none';
-            document.getElementById('connect-btn').innerText = mode === 'group' ? 'Add Member' : 'Join Chat';
-        }
+    function switchMode(mode) {  
+        currentMode = mode;  
+        document.getElementById('tab-single').classList.toggle('active', mode === 'single');  
+        document.getElementById('tab-group').classList.toggle('active', mode === 'group');  
+        document.getElementById('group-info').style.display = mode === 'group' ? 'block' : 'none';  
+        document.getElementById('connect-btn').innerText = mode === 'group' ? 'Add Member' : 'Join Chat';  
+    }  
 
-        function connectPeer() {
-            const friendId = document.getElementById('friend-id').value.trim();
-            if (!friendId || friendId === myId) return alert("Dost ki sahi ID daalein!");
-            const conn = peer.connect(friendId);
-            setupConnection(conn);
-            document.getElementById('friend-id').value = "";
-        }
+    function connectPeer() {  
+        const friendId = document.getElementById('friend-id').value.trim();  
+        if (!friendId || friendId === myId) return alert("Dost ki sahi ID daalein!");  
+        const conn = peer.connect(friendId);  
+        setupConnection(conn);  
+        document.getElementById('friend-id').value = "";  
+    }  
 
-        function setupConnection(conn) {
-            conn.on('open', () => {
-                if (currentMode === 'single') {
-                    singleConn = conn;
-                    addSystemMsg("Connected with: " + conn.peer);
-                } else {
-                    if (!groupConns.find(c => c.peer === conn.peer)) {
-                        groupConns.push(conn);
-                        document.getElementById('member-count').innerText = groupConns.length;
-                        addSystemMsg(conn.peer + " group mein jud gaya!");
-                    }
-                }
-            });
+    function setupConnection(conn) {  
+        conn.on('open', () => {  
+            if (currentMode === 'single') {  
+                singleConn = conn;  
+                addSystemMsg("Connected with: " + conn.peer);  
+            } else {  
+                if (!groupConns.find(c => c.peer === conn.peer)) {  
+                    groupConns.push(conn);  
+                    document.getElementById('member-count').innerText = groupConns.length;  
+                    addSystemMsg(conn.peer + " group mein jud gaya!");  
+                }  
+            }  
+        });  
 
-            conn.on('data', (data) => {
-                displayMessage(data.text, 'received', data.sender);
-                if (currentMode === 'group' && !data.forwarded) {
-                    groupConns.forEach(c => {
-                        if (c.peer !== conn.peer && c.open) {
-                            c.send({ text: data.text, sender: data.sender, forwarded: true });
-                        }
-                    });
-                }
-            });
-        }
+        conn.on('data', (data) => {  
+            displayMessage(data.text, 'received', data.sender);  
+            if (currentMode === 'group' && !data.forwarded) {  
+                groupConns.forEach(c => {  
+                    if (c.peer !== conn.peer && c.open) {  
+                        c.send({ text: data.text, sender: data.sender, forwarded: true });  
+                    }  
+                });  
+            }  
+        });  
+    }  
 
-        function sendMessage() {
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if (!text) return;
+    function sendMessage() {  
+        const input = document.getElementById('msg-input');  
+        const text = input.value.trim();  
+        if (!text) return;  
 
-            const payload = { text: text, sender: myName || myId };
+        const payload = { text: text, sender: myName || myId };  
 
-            if (currentMode === 'single') {
-                if (singleConn && singleConn.open) {
-                    singleConn.send(payload);
-                    displayMessage(text, 'sent', 'You');
-                } else {
-                    return alert("Pehle dost ki ID daal kar 'Join Chat' dabayein!");
-                }
-            } else {
-                if (groupConns.length > 0) {
-                    groupConns.forEach(c => { if (c.open) c.send(payload); });
-                    displayMessage(text, 'sent', 'You (Group)');
-                } else {
-                    return alert("Group mein pehle kisi dost ko Add karein!");
-                }
-            }
-            input.value = "";
-        }
+        if (currentMode === 'single') {  
+            if (singleConn && singleConn.open) {  
+                singleConn.send(payload);  
+                displayMessage(text, 'sent', 'You');  
+            } else {  
+                return alert("Pehle dost ki ID daal kar 'Join Chat' dabayein!");  
+            }  
+        } else {  
+            if (groupConns.length > 0) {  
+                groupConns.forEach(c => { if (c.open) c.send(payload); });  
+                displayMessage(text, 'sent', 'You (Group)');  
+            } else {  
+                return alert("Group mein pehle kisi dost ko Add karein!");  
+            }  
+        }  
+        input.value = "";  
+    }  
 
-        function displayMessage(text, type, sender) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = `msg ${type}`;
-            div.innerHTML = `<div class="msg-sender">${sender}</div><div>${text}</div>`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
+    function displayMessage(text, type, sender) {  
+        const box = document.getElementById('chat-box');  
+        const div = document.createElement('div');  
+        div.className = `msg ${type}`;  
+        div.innerHTML = `<div class="msg-sender">${sender}</div><div>${text}</div>`;  
+        box.appendChild(div);  
+        box.scrollTop = box.scrollHeight;  
+    }  
 
-        function addSystemMsg(text) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = 'system-msg';
-            div.innerText = text;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
+    function addSystemMsg(text) {  
+        const box = document.getElementById('chat-box');  
+        const div = document.createElement('div');  
+        div.className = 'system-msg';  
+        div.innerText = text;  
+        box.appendChild(div);  
+        box.scrollTop = box.scrollHeight;  
+    }  
 
-        // Calling Functions
-        async function startCall() {
-            let targetId = document.getElementById('friend-id').value.trim();
-            if (!targetId && singleConn) targetId = singleConn.peer;
-            if (!targetId) return alert("Call ke liye dost ki ID daalein!");
+    // Calling Functions  
+    async function startCall() {  
+        let targetId = document.getElementById('friend-id').value.trim();  
+        if (!targetId && singleConn) targetId = singleConn.peer;  
+        if (!targetId) return alert("Call ke liye dost ki ID daalein!");  
 
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const call = peer.call(targetId, localStream);
-                handleCall(call);
-            } catch (e) { alert("Mic permission allow karein!"); }
-        }
+        try {  
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });  
+            const call = peer.call(targetId, localStream);  
+            handleCall(call);  
+        } catch (e) { alert("Mic permission allow karein!"); }  
+    }  
 
-        function handleCall(call) {
-            activeCall = call;
-            document.getElementById('call-btn').style.display = 'none';
-            document.getElementById('end-btn').style.display = 'inline-block';
-            document.getElementById('call-status').style.display = 'block';
+    function handleCall(call) {  
+        activeCall = call;  
+        document.getElementById('call-btn').style.display = 'none';  
+        document.getElementById('end-btn').style.display = 'inline-block';  
+        document.getElementById('call-status').style.display = 'block';  
 
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remote-audio').srcObject = remoteStream;
-            });
-            call.on('close', () => endCall());
-        }
+        call.on('stream', (remoteStream) => {  
+            document.getElementById('remote-audio').srcObject = remoteStream;  
+        });  
+        call.on('close', () => endCall());  
+    }  
 
-        function endCall() {
-            if (activeCall) activeCall.close();
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
-            activeCall = null;
-            document.getElementById('call-btn').style.display = 'inline-block';
-            document.getElementById('end-btn').style.display = 'none';
-            document.getElementById('call-status').style.display = 'none';
-            addSystemMsg("Call Ended.");
-        }
+    function endCall() {  
+        if (activeCall) activeCall.close();  
+        if (localStream) localStream.getTracks().forEach(t => t.stop());  
+        activeCall = null;  
+        document.getElementById('call-btn').style.display = 'inline-block';  
+        document.getElementById('end-btn').style.display = 'none';  
+        document.getElementById('call-status').style.display = 'none';  
+        addSystemMsg("Call Ended.");  
+    }  
 
-        // PWA Install Button Logic
-        let deferredPrompt;
-        const installBtn = document.getElementById('install-btn');
+    // PWA Install Button Logic  
+    let deferredPrompt;  
+    const installBtn = document.getElementById('install-btn');  
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
+    if ('serviceWorker' in navigator) {  
+        navigator.serviceWorker.register('sw.js').catch(() => {});  
+    }  
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'inline-block';
-        });
+    window.addEventListener('beforeinstallprompt', (e) => {  
+        e.preventDefault();  
+        deferredPrompt = e;  
+        installBtn.style.display = 'inline-block';  
+    });  
 
-        async function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') installBtn.style.display = 'none';
-                deferredPrompt = null;
-            } else {
-                alert("App install karne ke liye Chrome ke upar 3 dots (⋮) par click karein aur 'Add to Home screen' ya 'Install app' chunein.");
-            }
-        }
-    </script>
-</body>
-</html>
+    async function installPWA() {  
+        if (deferredPrompt) {  
+            deferredPrompt.prompt();  
+            const { outcome } = await deferredPrompt.userChoice;  
+            if (outcome === 'accepted') installBtn.style.display = 'none';  
+            deferredPrompt = null;  
+        } else {  
+            alert("App install karne ke liye Chrome ke upar 3 dots (⋮) par click karein aur 'Add to Home screen' ya 'Install app' chunein.");  
+        }  
+    }  
+</script>
+
+</body>  
+</html>  
